@@ -1,7 +1,0 @@
-{
-  "name": "meme-room-party", "version": "1.0.0", "private": true,
-  "description": "Family-friendly big-screen meme caption party game for 20-25 players",
-  "scripts": {"start": "node server.js", "dev": "node --watch server.js"},
-  "engines": {"node": ">=20"},
-  "dependencies": {"express": "^4.21.2", "socket.io": "^4.8.1", "qrcode": "^1.5.4", "dotenv": "^16.4.7"}
-}
