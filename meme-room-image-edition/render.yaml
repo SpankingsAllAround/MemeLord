@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: meme-room-party
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: HOST_PIN
+        sync: false
