@@ -1,16 +1,29 @@
-# Meme Room — a TV + phone caption party game
+# Meme Room — Image Edition (TV + phone caption party game)
 
 An original, family-friendly, What Do You Meme?-style party game designed for 20–25 people (supports up to 40), with no physical cards or player accounts.
 
 ## What you get
 - **TV host screen** at `/host` with QR code, live player count, stage controls, private caption review, winners, and top-ten leaderboard.
 - **Phone player screen** at `/` for joining, writing original captions, first-round voting, and final voting.
-- 16 **original illustrated-emoji scenario prompts**, rotating without repeats until the deck is exhausted.
+- **Your own real meme pictures** from `public/memes/` (JPG, JPEG, PNG, WebP), automatically found when the server starts. Images fill the TV and phone screens without cropping, with a shuffled deck and no repeats until every image has appeared.
+- The original **16 emoji scenarios remain as an automatic fallback** only when the memes folder contains no supported images.
 - Players cannot vote for themselves, and can submit/vote only once per stage.
 - **Two-stage voting** for larger groups: up to five captions per voter in a preliminary ballot; top five go to the final. When there are five or fewer entries, go straight to final voting.
 - Host can remove captions before they appear in ballots. No captions are displayed to players until ballots open.
 - Scores: 100 points per final vote, 50 points for finalist, 300 bonus for round winner(s) instead of 50. Ties share the winner bonus.
 - Device reconnect with a unique browser token; no login or participant emails.
+
+## Add meme pictures (new!)
+
+1. In your GitHub repo, navigate to `public` > `memes`.
+2. Choose **Add file** > **Upload files** and select the JPG, JPEG, PNG or WebP meme photos you want to use. (You can upload several at once.)
+3. Choose **Commit changes**. Render automatically redeploys if auto-deploy is enabled.
+4. Visit your `/host` lobby. Its Host Controls note shows how many image memes have loaded.
+5. Start the game as usual. Each photo will appear on the TV and players' phones; players write captions for the photo, then vote.
+
+The folder is deliberately empty in this download: **you supply your own pictures**. Until you add at least one, the old 16 emoji prompts keep the game playable. Photos must reside directly in `public/memes/` (not a subfolder). The app does not fetch memes from online sources or upload photos from players' phones.
+
+See **`HOW-TO-ADD-MEMES.md`** for screenshots-free, detailed instructions including how to replace or remove photos.
 
 ## Run locally
 
@@ -49,13 +62,14 @@ A free instance can sleep when idle and may take time to start. Paid always-on h
 - **In-memory data only**: restarting the server resets game, scores and player identities. Use an always-on host and avoid deploying during a game.
 - **Late joins** are disabled after the host starts; device reconnects are supported through locally stored browser tokens.
 - **Family friendliness is host-moderated**, not guaranteed by an automated content filter. The private review step matters.
-- **No camera or photo uploads**; prompts are original text + emoji illustrations. You can replace the prompts in `server.js` with your own original scenarios.
+- **Images are added through your GitHub repository**, not uploaded from the game website. Add them to `public/memes/`, commit, and allow Render to redeploy. There is no image upload dashboard and no online image search. If you add images, the original emoji prompts are not included in the randomized deck.
 - For 20–25 participants, use stable Wi-Fi or internet access, test with a few phones, and keep the host PIN secret.
 - The current preliminary ballot samples eligible captions, but because not every player sees every caption, voting is intended for fun, not scientific fairness.
 
 ## Customize
 
-- Change the `scenes` list in `server.js` to add prompts (fields: `icon`, `title`, `scene`, `mood`).
+- Add or replace your own JPG, JPEG, PNG or WebP images directly in `public/memes/`, and commit to GitHub. The deck is built automatically on server startup—no code changes necessary. See `HOW-TO-ADD-MEMES.md` and `public/memes/README.md`.
+- Without images, the game falls back to the 16 original emoji prompts defined in `server.js`.
 - Adjust stage labels and styling in `public/style.css`, `host.js`, and `player.js`.
 - Change the round limit choices in `public/host.js`.
 

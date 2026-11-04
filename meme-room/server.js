@@ -6,6 +6,7 @@ const { Server } = require('socket.io');
 const QRCode = require('qrcode');
 const crypto = require('crypto');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -25,6 +26,7 @@ app.get('/api/qr.svg', async (req, res) => {
   } catch (_) { res.status(500).end(); }
 });
 
+// Original text/emoji prompts remain as a backup until you add photos to public/memes/.
 const scenes = [
   { icon: '🐱', title: 'The cat is judging', scene: 'A cat stares at you from the kitchen counter.', mood: 'side-eye' },
   { icon: '🦖', title: 'Tiny arms, big plans', scene: 'A dinosaur attempts to reach the top shelf.', mood: 'oops' },
@@ -43,6 +45,31 @@ const scenes = [
   { icon: '🦥', title: 'Quick question', scene: 'A sloth raises its hand halfway through a meeting.', mood: 'calm' },
   { icon: '🐼', title: 'Just five more minutes', scene: 'A panda refuses to get out of a blanket fort.', mood: 'night' }
 ];
+// Build the image deck from public/memes/ on startup. No code edits or image URLs needed.
+const memeDirectory = path.join(__dirname, 'public', 'memes');
+const imageExtensions = new Set(['.jpg', '.jpeg', '.png', '.webp']);
+function readMemeImages() {
+  if (!fs.existsSync(memeDirectory)) return [];
+  return fs.readdirSync(memeDirectory, { withFileTypes: true })
+    .filter(entry => entry.isFile() && imageExtensions.has(path.extname(entry.name).toLowerCase()))
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map(entry => {
+      const filename = entry.name;
+      const label = path.parse(filename).name
+        .replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim() || 'Funny photo';
+      return {
+        image: '/memes/' + encodeURIComponent(filename),
+        alt: label,
+        // Keep photos uncaptioned so players can invent their own joke.
+        title: '', scene: '', mood: 'photo'
+      };
+    });
+}
+const memeImages = readMemeImages();
+const activeDeck = memeImages.length ? memeImages : scenes;
+console.log(memeImages.length
+  ? `Loaded ${memeImages.length} meme image(s) from public/memes.`
+  : 'No meme images in public/memes; using the 16 original emoji prompts.');
 let state;
 const players = new Map();
 const hostSockets = new Set();
@@ -53,7 +80,7 @@ const clean = (s, limit) => typeof s === 'string' ? s.trim().replace(/\s+/g,' ')
 const playerList = () => [...players.values()].map(({ id,name,score,connected })=>({id,name,score,connected}));
 const ranking = () => playerList().sort((a,b)=>b.score-a.score || a.name.localeCompare(b.name));
 const captionList = () => [...state.submissions.entries()].filter(([id])=>players.has(id)).map(([id,text])=>({id,text,name:players.get(id).name}));
-const phasePublic = () => ({phase:state.phase,round:state.round,maxRounds:state.maxRounds,scene:state.scene,players:playerList(),submitted:state.submissions.size,results:state.results,leaderboard:ranking().slice(0,10),finalistCount:state.finalists.length});
+const phasePublic = () => ({phase:state.phase,round:state.round,maxRounds:state.maxRounds,scene:state.scene,players:playerList(),submitted:state.submissions.size,results:state.results,leaderboard:ranking().slice(0,10),finalistCount:state.finalists.length,memeImageCount:memeImages.length,deckSize:activeDeck.length});
 function publish() {
  io.emit('game:state', phasePublic());
  for (const p of players.values()) if (p.socketId) sendPlayer(p);
@@ -70,9 +97,9 @@ function ok(ack,data={}) { if(typeof ack==='function') ack({ok:true,...data}); }
 function auth(s) { return s.data.host === true; }
 function hostOnly(s,ack) { if(!auth(s)){fail(ack,'Host access required.');return false;}return true; }
 function pickScene() {
- let available=scenes.map((_,i)=>i).filter(i=>!state.usedScenes.includes(i));
- if(!available.length){state.usedScenes=[];available=scenes.map((_,i)=>i);}
- const index=available[crypto.randomInt(available.length)]; state.usedScenes.push(index); return scenes[index];
+ let available=activeDeck.map((_,i)=>i).filter(i=>!state.usedScenes.includes(i));
+ if(!available.length){state.usedScenes=[];available=activeDeck.map((_,i)=>i);}
+ const index=available[crypto.randomInt(available.length)]; state.usedScenes.push(index); return activeDeck[index];
 }
 function nextRound() {
  state.round++; state.phase='submit'; state.scene=pickScene(); state.submissions=new Map();state.ballots=new Map();state.votes=new Map();state.finalists=[];state.results=[];state.stage='';

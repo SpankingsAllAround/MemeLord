@@ -13,7 +13,7 @@ function renderHost(){if(!hs)return;const s=hs;const count=s.players.filter(p=>p
  if(s.phase==='lobby'){
   tag.textContent='Welcome!';heading.textContent='Scan to join the game';sub.textContent='Type your name on your phone and get ready to caption!';renderScene($('scene'),null);status.textContent=`${s.players.length} players joined`;done=s.players.length;total=25;
   const label=add(controls,'label','small','Rounds ');label.htmlFor='maxrounds';const select=add(controls,'select');select.id='maxrounds';[5,8,10,12,15,20].forEach(v=>{const opt=add(select,'option','',`${v} rounds`);opt.value=v;if(v===10)opt.selected=true;});const btn=control('Start game','start');btn.onclick=()=>action('start',{maxRounds:Number(select.value)});
-  note='At least two players needed. Players cannot join mid-game, but disconnected players can reconnect.';
+  note=(s.memeImageCount?`${s.memeImageCount} meme images loaded from public/memes. Images appear in a random order without repeats.`:'No image files yet. Using the 16 original prompts. Add JPG, PNG, or WebP files to public/memes on GitHub, then redeploy.')+' At least two players needed. Players cannot join mid-game, but disconnected players can reconnect.';
  } else if(s.phase==='submit'){
   tag.textContent='Write your caption';heading.textContent='Make us laugh!';sub.textContent='Everyone writes one original family-friendly caption for the scene.';renderScene($('scene'),s.scene);
   status.textContent=`${s.submitted} of ${s.players.length} captions submitted`;done=s.submitted;total=s.players.length;control('Close submissions & review','review');note='You can wait until everyone submits, or close submissions at any time once two captions are in.';

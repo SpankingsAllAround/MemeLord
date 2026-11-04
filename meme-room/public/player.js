@@ -1,12 +1,11 @@
 let game=null, me=null;
-const savedToken=localStorage.getItem('meme-room-token');
 const savedName=localStorage.getItem('meme-room-name');
 if(savedName)$('name').value=savedName;
 function join(){clearError();const name=$('name').value.trim();send('player:join',{name,token:localStorage.getItem('meme-room-token')},r=>{localStorage.setItem('meme-room-token',r.token);localStorage.setItem('meme-room-name',r.name);$('join').classList.add('hidden');$('game').classList.remove('hidden');});}
 $('joinbtn').onclick=join;$('name').addEventListener('keydown',e=>{if(e.key==='Enter')join();});
 $('caption').oninput=()=>$('characters').textContent=$('caption').value.length;
 $('submit').onclick=()=>{clearError();send('player:submit',{caption:$('caption').value},()=>{$('caption').value='';$('characters').textContent='0';});};
-socket.on('connect',()=>{$('connection').textContent='Connected';if(savedToken&&savedName)send('player:join',{name:savedName,token:savedToken},r=>{$('join').classList.add('hidden');$('game').classList.remove('hidden');});});
+socket.on('connect',()=>{$('connection').textContent='Connected';if(localStorage.getItem('meme-room-token')&&localStorage.getItem('meme-room-name'))send('player:join',{name:localStorage.getItem('meme-room-name'),token:localStorage.getItem('meme-room-token')},r=>{$('join').classList.add('hidden');$('game').classList.remove('hidden');});});
 socket.on('disconnect',()=>{$('connection').textContent='Reconnecting…';});
 socket.on('game:state',g=>{game=g;render();});
 socket.on('player:state',p=>{me=p;render();});
